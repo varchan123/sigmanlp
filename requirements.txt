@@ -1,4 +1,4 @@
-torch --index-url https://download.pytorch.org/whl/cpu
+torch==1.10.0
 beautifulsoup4==4.8.2
 click==7.0
 cssutils==1.0.2
