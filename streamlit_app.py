@@ -126,7 +126,7 @@ def extract_all_json_content(folder_path):
 st.title("10-K Filings Sentiment Analysis")
 
 # Input fields for ticker and start year
-ticker = st.text_input("Enter the stock ticker (e.g., GOOG):)
+ticker = st.text_input("Enter the stock ticker (e.g., GOOG):")
 start_year = st.number_input("Enter the start year (e.g., 2019):", min_value=2000, max_value=2025)
 
 if st.button("Analyze"):
