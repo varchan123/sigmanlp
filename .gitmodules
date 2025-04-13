@@ -1,0 +1,3 @@
+[submodule "edgar-crawler"]
+	path = edgar-crawler
+	url = https://github.com/lefterisloukas/edgar-crawler.git
