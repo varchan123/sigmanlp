@@ -197,7 +197,7 @@ if st.button("Analyze"):
         output_file = f"{ticker}_10k_sentiment_analysis.csv"
         df.to_csv(output_file, index=False)
         st.success(f"Results saved to {output_file}")
-         st.subheader("Key Topics and Summaries (via TextRazor)")
+        st.subheader("Key Topics and Summaries (via TextRazor)")
         for report in data:
             if "item_1" in report:
                 textrazor_analysis = analyze_with_textrazor(report["item_1"])
