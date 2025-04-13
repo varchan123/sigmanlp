@@ -8,7 +8,12 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import numpy as np
 import subprocess
 
-
+import asyncio
+try:
+    asyncio.get_running_loop()
+except RuntimeError:
+    asyncio.set_event_loop(asyncio.new_event_loop())
+    
 # Load FinBERT model and tokenizer
 def clear_extracted_content(folder_path):
     """
