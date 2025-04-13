@@ -8,14 +8,6 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import numpy as np
 import subprocess
 
-BASE_DIR = os.getenv("BASE_DIR", "/mount/src/sigmanlp/")
-
-# Construct the file path
-file_path = os.path.join(BASE_DIR, "streamlit_app.py")
-
-# Use the file path
-with open(file_path, "r") as f:
-    content = f.read()
 
 # Load FinBERT model and tokenizer
 def clear_extracted_content(folder_path):
