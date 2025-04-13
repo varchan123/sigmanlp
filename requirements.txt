@@ -1,3 +1,4 @@
+--upgrade pip
 beautifulsoup4==4.8.2
 click==7.0
 cssutils==1.0.2
