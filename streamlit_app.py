@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import json
 import pandas as pd
+pip install transformers
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import numpy as np
 import subprocess
