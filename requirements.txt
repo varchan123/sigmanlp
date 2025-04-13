@@ -10,4 +10,4 @@ tqdm==4.42.1
 pathos==0.2.9
 urllib3==1.26.7
 transformers
-torch torchvision torchaudio
+torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
