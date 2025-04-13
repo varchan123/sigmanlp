@@ -1,5 +1,7 @@
 import streamlit as st
 import os
+import shutil
+import requests
 import json
 import pandas as pd
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
@@ -7,6 +9,23 @@ import numpy as np
 import subprocess
 
 # Load FinBERT model and tokenizer
+def clear_extracted_content(folder_path):
+    """
+    Deletes all files and subdirectories in the specified folder.
+    """
+    if os.path.exists(folder_path):
+        # Delete all files and directories within the folder
+        for filename in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)  # Remove file
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)  # Remove directory
+            except Exception as e:
+                print(f"Failed to delete {file_path}. Reason: {e}")
+    else:
+        print(f"The folder {folder_path} does not exist.")
 @st.cache_resource
 def load_finbert():
     model_name = "yiyanghkust/finbert-tone"
@@ -34,7 +53,13 @@ def download_and_process_filings(ticker, start_year):
     """
     Downloads 10-K filings for the specified ticker and start year, processes the data,
     and returns a list of dictionaries containing extracted content.
+
     """
+    folder_path = os.path.join("edgar-crawler", "datasets", "EXTRACTED_FILINGS")
+
+    # Clear old extracted content
+    clear_extracted_content(folder_path)
+
     # Clone the repository if not already cloned
     repo_dir = "edgar-crawler"
     if not os.path.exists(repo_dir):
@@ -153,6 +178,8 @@ def fetch_related_news(ticker):
     else:
         st.error(f"NewsAPI Error: {response.status_code}")
         return None
+
+
 
 # Streamlit app UI
 st.title("10-K Filings Sentiment Analysis")
