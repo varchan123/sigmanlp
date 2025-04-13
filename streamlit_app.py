@@ -122,6 +122,38 @@ def extract_all_json_content(folder_path):
 
     return extracted_content
 
+def analyze_with_textrazor(text):
+    """
+    Analyze the extracted text using TextRazor to identify key topics and summaries.
+    """
+    API_KEY = "your_textrazor_api_key"  # Replace with your TextRazor API key
+    endpoint = "https://api.textrazor.com/"
+    headers = {"x-textrazor-key": API_KEY}
+
+    data = {
+        "text": text,
+        "extractors": "topics,entities,sentences"
+    }
+    response = requests.post(endpoint, headers=headers, data=data)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        st.error(f"TextRazor API Error: {response.status_code}")
+        return None
+
+def fetch_related_news(ticker):
+    """
+    Fetch news articles related to the given ticker using NewsAPI.
+    """
+    API_KEY = "your_newsapi_api_key"  # Replace with your NewsAPI key
+    endpoint = f"https://newsapi.org/v2/everything?q={ticker}&apiKey={API_KEY}"
+    response = requests.get(endpoint)
+    if response.status_code == 200:
+        return response.json()["articles"]
+    else:
+        st.error(f"NewsAPI Error: {response.status_code}")
+        return None
+
 # Streamlit app UI
 st.title("10-K Filings Sentiment Analysis")
 
@@ -165,3 +197,23 @@ if st.button("Analyze"):
         output_file = f"{ticker}_10k_sentiment_analysis.csv"
         df.to_csv(output_file, index=False)
         st.success(f"Results saved to {output_file}")
+         st.subheader("Key Topics and Summaries (via TextRazor)")
+        for report in data:
+            if "item_1" in report:
+                textrazor_analysis = analyze_with_textrazor(report["item_1"])
+                if textrazor_analysis:
+                    st.json(textrazor_analysis)
+
+        st.subheader("Related News Articles (via NewsAPI)")
+        news_articles = fetch_related_news(ticker)
+        if news_articles:
+            for article in news_articles[:5]:  # Display the top 5 articles
+                st.write(f"**{article['title']}**")
+                st.write(f"Source: {article['source']['name']}")
+                st.write(f"[Read more]({article['url']})")
+                st.write("---")
+
+
+
+
+
