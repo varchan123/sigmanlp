@@ -227,11 +227,7 @@ if st.button("Analyze"):
         df.to_csv(output_file, index=False)
         st.success(f"Results saved to {output_file}")
         st.subheader("Key Topics and Summaries (via TextRazor)")
-        for report in data:
-            if "item_1" in report:
-                textrazor_analysis = analyze_with_textrazor(report["item_1"])
-                if textrazor_analysis:
-                    st.json(textrazor_analysis)
+        
 
         st.subheader("Related News Articles (via NewsAPI)")
         news_articles = fetch_related_news(ticker)
