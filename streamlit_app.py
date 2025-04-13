@@ -56,9 +56,11 @@ def download_and_process_filings(ticker, start_year):
 
     """
     folder_path = os.path.join("edgar-crawler", "datasets", "EXTRACTED_FILINGS")
+    folder_path2 = os.path.join("edgar-crawler", "datasets", "RAW_FILINGS")
 
     # Clear old extracted content
     clear_extracted_content(folder_path)
+    clear_extracted_content(folder_path2)
 
     # Clone the repository if not already cloned
     repo_dir = "edgar-crawler"
