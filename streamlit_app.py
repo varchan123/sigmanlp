@@ -4,7 +4,7 @@ import json
 import pandas as pd
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import numpy as np
-import subprocess
+import requests
 
 # Load FinBERT model and tokenizer
 @st.cache_resource
@@ -35,17 +35,11 @@ def download_and_process_filings(ticker, start_year):
     Downloads 10-K filings for the specified ticker and start year, processes the data,
     and returns a list of dictionaries containing extracted content.
     """
-    # Clone the repository if not already cloned
-    repo_dir = "edgar-crawler"
-    if not os.path.exists(repo_dir):
-        subprocess.run(["git", "clone", "https://github.com/nlpaueb/edgar-crawler.git"], check=True)
-    
-    # Navigate to the repository directory
-    os.chdir(repo_dir)
-
-    # Create the configuration file
+    # Get the current year
     from datetime import datetime
     current_year = datetime.now().year
+
+    # Create the configuration file
     config = {
         "download_filings": {
             "start_year": start_year,
@@ -70,15 +64,18 @@ def download_and_process_filings(ticker, start_year):
             "skip_extracted_filings": True
         }
     }
+
+    # Overwrite the config.json file to ensure it uses the latest start_year
     with open('config.json', 'w') as f:
         json.dump(config, f, indent=4)
 
     # Run the download and extract scripts
-    subprocess.run(["python", "download_filings.py"], check=True)
-    subprocess.run(["python", "extract_items.py"], check=True)
-
-    # Change back to the original directory
-    os.chdir('..')
+    try:
+        subprocess.run(["python", "download_filings.py"], check=True)
+        subprocess.run(["python", "extract_items.py"], check=True)
+    except subprocess.CalledProcessError as e:
+        st.error(f"An error occurred while running the script: {e}")
+        raise
 
 def extract_all_json_content(folder_path):
     """
@@ -122,12 +119,44 @@ def extract_all_json_content(folder_path):
 
     return extracted_content
 
+def analyze_with_textrazor(text):
+    """
+    Analyze the extracted text using TextRazor to identify key topics and summaries.
+    """
+    API_KEY = "068ac1f6ee66ff8b078bd47d186336f9ae76ce919712ab203f287401"  # Replace with your TextRazor API key
+    endpoint = "https://api.textrazor.com/"
+    headers = {"x-textrazor-key": API_KEY}
+
+    data = {
+        "text": text,
+        "extractors": "topics,entities,sentences"
+    }
+    response = requests.post(endpoint, headers=headers, data=data)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        st.error(f"TextRazor API Error: {response.status_code}")
+        return None
+
+def fetch_related_news(ticker):
+    """
+    Fetch news articles related to the given ticker using NewsAPI.
+    """
+    API_KEY = "dcc1378340a64ab6b76ba8c6ded498d1"  # Replace with your NewsAPI key
+    endpoint = f"https://newsapi.org/v2/everything?q={ticker}&apiKey={API_KEY}"
+    response = requests.get(endpoint)
+    if response.status_code == 200:
+        return response.json()["articles"]
+    else:
+        st.error(f"NewsAPI Error: {response.status_code}")
+        return None
+
 # Streamlit app UI
 st.title("10-K Filings Sentiment Analysis")
 
 # Input fields for ticker and start year
-ticker = st.text_input("Enter the stock ticker (e.g., GOOG):")
-start_year = st.number_input("Enter the start year (e.g., 2019):", min_value=2000, max_value=2025)
+ticker = st.text_input("Enter the stock ticker (e.g., GOOG):", "GOOG")
+start_year = st.number_input("Enter the start year (e.g., 2019):", min_value=2000, max_value=2025, value=2019)
 
 if st.button("Analyze"):
     st.info("Downloading and processing filings. This may take a few minutes...")
@@ -165,3 +194,19 @@ if st.button("Analyze"):
         output_file = f"{ticker}_10k_sentiment_analysis.csv"
         df.to_csv(output_file, index=False)
         st.success(f"Results saved to {output_file}")
+
+        st.subheader("Key Topics and Summaries (via TextRazor)")
+        for report in data:
+            if "item_1" in report:
+                textrazor_analysis = analyze_with_textrazor(report["item_1"])
+                if textrazor_analysis:
+                    st.json(textrazor_analysis)
+
+        st.subheader("Related News Articles (via NewsAPI)")
+        news_articles = fetch_related_news(ticker)
+        if news_articles:
+            for article in news_articles[:5]:  # Display the top 5 articles
+                st.write(f"**{article['title']}**")
+                st.write(f"Source: {article['source']['name']}")
+                st.write(f"[Read more]({article['url']})")
+                st.write("---")
