@@ -153,7 +153,7 @@ def analyze_with_textrazor(text):
     """
     Analyze the extracted text using TextRazor to identify key topics and summaries.
     """
-    API_KEY = "your_textrazor_api_key"  # Replace with your TextRazor API key
+    API_KEY = "068ac1f6ee66ff8b078bd47d186336f9ae76ce919712ab203f287401"  # Replace with your TextRazor API key
     endpoint = "https://api.textrazor.com/"
     headers = {"x-textrazor-key": API_KEY}
 
@@ -172,7 +172,7 @@ def fetch_related_news(ticker):
     """
     Fetch news articles related to the given ticker using NewsAPI.
     """
-    API_KEY = "your_newsapi_api_key"  # Replace with your NewsAPI key
+    API_KEY = "dcc1378340a64ab6b76ba8c6ded498d1"  # Replace with your NewsAPI key
     endpoint = f"https://newsapi.org/v2/everything?q={ticker}&apiKey={API_KEY}"
     response = requests.get(endpoint)
     if response.status_code == 200:
