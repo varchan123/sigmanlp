@@ -7,13 +7,16 @@ import pandas as pd
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import numpy as np
 import subprocess
+import plotly.express as px
+from matplotlib import cm
+from matplotlib.colors import Normalize
 
 import asyncio
 try:
     asyncio.get_running_loop()
 except RuntimeError:
     asyncio.set_event_loop(asyncio.new_event_loop())
-    
+
 # Load FinBERT model and tokenizer
 def clear_extracted_content(folder_path):
     """
@@ -32,6 +35,7 @@ def clear_extracted_content(folder_path):
                 print(f"Failed to delete {file_path}. Reason: {e}")
     else:
         print(f"The folder {folder_path} does not exist.")
+
 @st.cache_resource
 def load_finbert():
     model_name = "yiyanghkust/finbert-tone"
@@ -59,7 +63,6 @@ def download_and_process_filings(ticker, start_year):
     """
     Downloads 10-K filings for the specified ticker and start year, processes the data,
     and returns a list of dictionaries containing extracted content.
-
     """
     folder_path = os.path.join("edgar-crawler", "datasets", "EXTRACTED_FILINGS")
     folder_path2 = os.path.join("edgar-crawler", "datasets", "RAW_FILINGS")
@@ -155,25 +158,6 @@ def extract_all_json_content(folder_path):
 
     return extracted_content
 
-def analyze_with_textrazor(text):
-    """
-    Analyze the extracted text using TextRazor to identify key topics and summaries.
-    """
-    API_KEY = "068ac1f6ee66ff8b078bd47d186336f9ae76ce919712ab203f287401"  # Replace with your TextRazor API key
-    endpoint = "https://api.textrazor.com/"
-    headers = {"x-textrazor-key": API_KEY}
-
-    data = {
-        "text": text,
-        "extractors": "topics,entities,sentences"
-    }
-    response = requests.post(endpoint, headers=headers, data=data)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        st.error(f"TextRazor API Error: {response.status_code}")
-        return None
-
 def fetch_related_news(ticker):
     """
     Fetch news articles related to the given ticker using NewsAPI.
@@ -186,8 +170,6 @@ def fetch_related_news(ticker):
     else:
         st.error(f"NewsAPI Error: {response.status_code}")
         return None
-
-
 
 # Streamlit app UI
 st.title("10-K Filings Sentiment Analysis")
@@ -224,17 +206,45 @@ if st.button("Analyze"):
 
             df = pd.concat([df, pd.DataFrame([row])], ignore_index=True)
 
-        # Display the DataFrame
-        st.subheader(f"Sentiment Analysis for {ticker}")
-        st.dataframe(df)
+        # Map item names to descriptive names
+        item_descriptions = {
+            "item_1": "Business Overview",
+            "item_2": "Risk Factors",
+            "item_3": "Legal Proceedings",
+            "item_4": "Company Properties",
+        }
+        df = df.rename(columns={item: description for item, description in item_descriptions.items()})
 
-        # Save the DataFrame to CSV
-        output_file = f"{ticker}_10k_sentiment_analysis.csv"
-        df.to_csv(output_file, index=False)
-        st.success(f"Results saved to {output_file}")
-       
-        
+        # Calculate yearly average scores
+        df['Year_Score'] = df.iloc[:, 1:].mean(axis=1)
 
+        # Display the graph
+        st.subheader(f"Overall Ratings for {ticker} Over the Years")
+        fig = px.line(
+            df,
+            x="year",
+            y="Year_Score",
+            title=f"Overall Ratings of {ticker} Over the Years",
+            labels={"year": "Year", "Year_Score": "Overall Score"},
+            markers=True
+        )
+        st.plotly_chart(fig)
+
+        # Function to apply color gradient
+        def color_cells(val):
+            norm = Normalize(vmin=1, vmax=5)
+            cmap = cm.get_cmap('RdYlGn')
+            rgba = cmap(norm(val))
+            return f"background-color: rgba({int(rgba[0]*255)}, {int(rgba[1]*255)}, {int(rgba[2]*255)}, {rgba[3]})"
+
+        # Apply the color formatting to the DataFrame
+        styled_df = df.style.applymap(color_cells, subset=[col for col in df.columns if col != 'year'])
+
+        # Display the colored table
+        st.subheader("Sentiment Analysis Table with Highlighted Scores")
+        st.dataframe(styled_df)
+
+        # Fetch and display related news articles
         st.subheader("Related News Articles (via NewsAPI)")
         news_articles = fetch_related_news(ticker)
         if news_articles:
@@ -243,8 +253,3 @@ if st.button("Analyze"):
                 st.write(f"Source: {article['source']['name']}")
                 st.write(f"[Read more]({article['url']})")
                 st.write("---")
-
-
-
-
-
