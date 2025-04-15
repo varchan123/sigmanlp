@@ -208,11 +208,30 @@ if st.button("Analyze"):
 
         # Map item names to descriptive names
         item_descriptions = {
-            "item_1": "Business Overview",
-            "item_2": "Risk Factors",
-            "item_3": "Legal Proceedings",
-            "item_4": "Company Properties",
-        }
+    "item_1": "Business Overview",
+    "item_1A": "Risk Factors",
+    "item_1B": "Staff Comments",
+    "item_1C": "Mine Safety",
+    "item_2": "Company Properties",
+    "item_3": "Legal Proceedings",
+    "item_4": "Mine Disclosures",
+    "item_5": "Equity Market",
+    "item_6": "Financial Summary",
+    "item_7": "Management Analysis",
+    "item_7A": "Market Risks",
+    "item_8": "Financial Statements",
+    "item_9": "Accountant Changes",
+    "item_9A": "Control Procedures",
+    "item_9B": "Other Information",
+    "item_9C": "Jurisdiction Limits",
+    "item_10": "Corporate Governance",
+    "item_11": "Executive Pay",
+    "item_12": "Shareholder Info",
+    "item_13": "Related Parties",
+    "item_14": "Audit Fees",
+    "item_15": "Supporting Docs",
+    "item_16": "10-K Summary"
+}
         df = df.rename(columns={item: description for item, description in item_descriptions.items()})
 
         # Calculate yearly average scores
